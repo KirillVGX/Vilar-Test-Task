@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ConfigProvider } from "antd";
 import App from "./App.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { theme } from "./theme.js";
 import "./index.css";
 
@@ -12,7 +13,9 @@ createRoot(document.getElementById("root")).render(
     <StrictMode>
         <QueryClientProvider client={queryClient}>
             <ConfigProvider theme={theme}>
-                <App />
+                <ErrorBoundary>
+                    <App />
+                </ErrorBoundary>
             </ConfigProvider>
         </QueryClientProvider>
     </StrictMode>,
