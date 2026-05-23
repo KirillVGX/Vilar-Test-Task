@@ -1,0 +1,113 @@
+import { useQuery } from "@tanstack/react-query";
+
+const COINGECKO_API_BASE_URL = import.meta.env.DEV
+    ? "/api/coingecko/api/v3"
+    : "https://api.coingecko.com/api/v3";
+const SUPPORTED_COIN_IDS = new Set(["bitcoin", "ethereum", "dogecoin"]);
+
+const dateTimeFormatter = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+});
+
+class CoinGeckoError extends Error {
+    constructor(message, status) {
+        super(message);
+        this.name = "CoinGeckoError";
+        this.status = status;
+    }
+}
+
+export function coinChartQueryKey(coinId) {
+    return ["coins", "market-chart", "usd", coinId, 7];
+}
+
+function toChartPoint([timestamp, price]) {
+    return {
+        timestamp,
+        price,
+        label: dateTimeFormatter.format(new Date(timestamp)),
+    };
+}
+
+async function fetchCoinChart({ coinId, signal }) {
+    if (!SUPPORTED_COIN_IDS.has(coinId)) {
+        throw new CoinGeckoError(`Unsupported coin id: ${coinId}`, 400);
+    }
+
+    const params = new URLSearchParams({
+        vs_currency: "usd",
+        days: "7",
+    });
+
+    let response;
+
+    try {
+        response = await fetch(
+            `${COINGECKO_API_BASE_URL}/coins/${coinId}/market_chart?${params}`,
+            {
+                headers: {
+                    accept: "application/json",
+                },
+                signal,
+            },
+        );
+    } catch (error) {
+        if (error.name === "AbortError") {
+            throw error;
+        }
+
+        throw new CoinGeckoError("Network request failed. Please try again later.");
+    }
+
+    if (!response.ok) {
+        const message =
+            response.status === 429
+                ? "CoinGecko rate limit reached. Data will refresh automatically."
+                : `CoinGecko request failed with status ${response.status}.`;
+
+        throw new CoinGeckoError(message, response.status);
+    }
+
+    let data;
+
+    try {
+        data = await response.json();
+    } catch {
+        throw new CoinGeckoError("CoinGecko returned an invalid JSON response.", response.status);
+    }
+
+    if (!Array.isArray(data.prices)) {
+        throw new CoinGeckoError("CoinGecko returned an unexpected chart payload.", response.status);
+    }
+
+    return data;
+}
+
+function shouldRetry(failureCount, error) {
+    if (error.status === 400 || error.status === 404) {
+        return false;
+    }
+
+    if (error.status === 429) {
+        return failureCount < 1;
+    }
+
+    return failureCount < 2;
+}
+
+export function useCoinChart(coinId) {
+    return useQuery({
+        queryKey: coinChartQueryKey(coinId),
+        queryFn: ({ signal }) => fetchCoinChart({ coinId, signal }),
+        select: (data) => data.prices.map(toChartPoint),
+        refetchInterval: 20_000,
+        staleTime: 15_000,
+        gcTime: 5 * 60_000,
+        retry: shouldRetry,
+        retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+        refetchOnWindowFocus: false,
+    });
+}
