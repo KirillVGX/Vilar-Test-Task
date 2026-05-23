@@ -1,12 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-const COINS_MARKETS_URL =
-    "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=50&page=1";
+const COINS_MARKETS_URL = "https://api.coingecko.com/api/v3/coins/markets";
 
-export const coinsQueryKey = ["coins", "markets", "usd", 50, 1];
+export function coinsQueryKey({ page = 1, perPage = 50 } = {}) {
+    return ["coins", "markets", "usd", perPage, page];
+}
 
-async function fetchCoins({ signal }) {
-    const response = await fetch(COINS_MARKETS_URL, { signal });
+async function fetchCoins({ page, perPage, signal }) {
+    const params = new URLSearchParams({
+        vs_currency: "usd",
+        per_page: String(perPage),
+        page: String(page),
+    });
+
+    const response = await fetch(`${COINS_MARKETS_URL}?${params}`, { signal });
 
     if (!response.ok) {
         throw new Error("Failed to load coin market data.");
@@ -15,12 +22,13 @@ async function fetchCoins({ signal }) {
     return response.json();
 }
 
-export function useCoins() {
+export function useCoins({ page = 1, perPage = 50, keepPrevious = false } = {}) {
     return useQuery({
-        queryKey: coinsQueryKey,
-        queryFn: fetchCoins,
+        queryKey: coinsQueryKey({ page, perPage }),
+        queryFn: ({ signal }) => fetchCoins({ page, perPage, signal }),
         staleTime: 60_000,
         gcTime: 5 * 60_000,
+        placeholderData: keepPrevious ? keepPreviousData : undefined,
         refetchOnWindowFocus: false,
     });
 }

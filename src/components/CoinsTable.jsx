@@ -113,13 +113,13 @@ const columns = [
     },
 ];
 
-function CoinsTable({ coins = [], loading = false }) {
+function CoinsTable({ coins = [], loading = false, pagination = false }) {
     return (
         <Table
             columns={columns}
             dataSource={coins}
             loading={loading}
-            pagination={false}
+            pagination={pagination}
             rowKey="id"
             scroll={{ x: 912, y: 560 }}
             size="middle"
