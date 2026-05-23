@@ -1,8 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { api } from "../config/api.js";
 
-const COINGECKO_API_BASE_URL = import.meta.env.DEV
-    ? "/api/coingecko/api/v3"
-    : "https://api.coingecko.com/api/v3";
 const SUPPORTED_COIN_IDS = new Set(["bitcoin", "ethereum", "dogecoin"]);
 const CHART_REFETCH_INTERVAL_MS = 30_000;
 
@@ -38,23 +36,15 @@ async function fetchCoinChart({ coinId, signal }) {
         throw new CoinGeckoError(`Unsupported coin id: ${coinId}`, 400);
     }
 
-    const params = new URLSearchParams({
-        vs_currency: "usd",
-        days: "7",
-    });
-
     let response;
 
     try {
-        response = await fetch(
-            `${COINGECKO_API_BASE_URL}/coins/${coinId}/market_chart?${params}`,
-            {
-                headers: {
-                    accept: "application/json",
-                },
-                signal,
+        response = await fetch(api.coinChart(coinId), {
+            headers: {
+                accept: "application/json",
             },
-        );
+            signal,
+        });
     } catch (error) {
         if (error.name === "AbortError") {
             throw error;
