@@ -115,6 +115,10 @@ function Chart() {
     const showRefreshWarning = isRefetchError && data.length > 0;
 
     async function handleRefresh() {
+        if (isManualRefresh || isFetching) {
+            return;
+        }
+
         setIsManualRefresh(true);
 
         try {
@@ -138,6 +142,7 @@ function Chart() {
                         type="primary"
                         icon={<ReloadOutlined />}
                         loading={isManualRefresh}
+                        disabled={isFetching}
                         onClick={handleRefresh}
                     >
                         Оновити

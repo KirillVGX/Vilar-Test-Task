@@ -4,6 +4,7 @@ const COINGECKO_API_BASE_URL = import.meta.env.DEV
     ? "/api/coingecko/api/v3"
     : "https://api.coingecko.com/api/v3";
 const SUPPORTED_COIN_IDS = new Set(["bitcoin", "ethereum", "dogecoin"]);
+const CHART_REFETCH_INTERVAL_MS = 30_000;
 
 const dateTimeFormatter = new Intl.DateTimeFormat("en-US", {
     month: "short",
@@ -65,7 +66,7 @@ async function fetchCoinChart({ coinId, signal }) {
     if (!response.ok) {
         const message =
             response.status === 429
-                ? "CoinGecko rate limit reached. Data will refresh automatically."
+                ? "CoinGecko rate limit reached. Showing the latest available chart until the next refresh."
                 : `CoinGecko request failed with status ${response.status}.`;
 
         throw new CoinGeckoError(message, response.status);
@@ -92,10 +93,10 @@ function shouldRetry(failureCount, error) {
     }
 
     if (error.status === 429) {
-        return failureCount < 1;
+        return false;
     }
 
-    return failureCount < 2;
+    return failureCount < 1;
 }
 
 export function useCoinChart(coinId) {
@@ -103,11 +104,12 @@ export function useCoinChart(coinId) {
         queryKey: coinChartQueryKey(coinId),
         queryFn: ({ signal }) => fetchCoinChart({ coinId, signal }),
         select: (data) => data.prices.map(toChartPoint),
-        refetchInterval: 20_000,
-        staleTime: 15_000,
+        refetchInterval: CHART_REFETCH_INTERVAL_MS,
+        staleTime: CHART_REFETCH_INTERVAL_MS,
         gcTime: 5 * 60_000,
         retry: shouldRetry,
         retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
         refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
     });
 }
