@@ -12,8 +12,9 @@ import {
     Typography,
 } from "antd";
 import { useEffect, useState } from "react";
+import PageHeader from "../components/ui/PageHeader.jsx";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const countryOptions = [
     { label: "United States", value: "United States" },
@@ -48,10 +49,10 @@ function Wizard() {
 
     return (
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
-            <div>
-                <Title level={2}>User Details Wizard</Title>
-                <Text type="secondary">Complete the form to generate a validated summary.</Text>
-            </div>
+            <PageHeader
+                title="User Details Wizard"
+                description="Complete the form to generate a validated summary."
+            />
 
             <Card>
                 {submittedValues ? (

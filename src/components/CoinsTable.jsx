@@ -1,48 +1,12 @@
 import { Avatar, Flex, Table, Typography } from "antd";
+import EmptyState from "./ui/EmptyState.jsx";
+import {
+    formatCompactCurrency,
+    formatCurrency,
+    formatSignedPercent,
+} from "../utils/formatters.js";
 
 const { Text } = Typography;
-
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2,
-});
-
-const compactCurrencyFormatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    notation: "compact",
-    maximumFractionDigits: 2,
-});
-
-const percentFormatter = new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-});
-
-function formatCurrency(value) {
-    if (!Number.isFinite(value)) {
-        return "-";
-    }
-
-    return currencyFormatter.format(value);
-}
-
-function formatCompactCurrency(value) {
-    if (!Number.isFinite(value)) {
-        return "-";
-    }
-
-    return compactCurrencyFormatter.format(value);
-}
-
-function formatPercent(value) {
-    if (!Number.isFinite(value)) {
-        return "-";
-    }
-
-    return `${percentFormatter.format(value)}%`;
-}
 
 function compareNumbers(field) {
     return (a, b) => (a[field] ?? 0) - (b[field] ?? 0);
@@ -63,7 +27,7 @@ function renderCoinName(_, coin) {
 function renderPercent(value) {
     const type = value >= 0 ? "success" : "danger";
 
-    return <Text type={type}>{formatPercent(value)}</Text>;
+    return <Text type={type}>{formatSignedPercent(value)}</Text>;
 }
 
 const columns = [
@@ -118,10 +82,11 @@ function CoinsTable({ coins = [], loading = false, pagination = false }) {
         <Table
             columns={columns}
             dataSource={coins}
+            locale={{ emptyText: <EmptyState description="No market data available" height={240} /> }}
             loading={loading}
             pagination={pagination}
             rowKey="id"
-            scroll={{ x: 912, y: 560 }}
+            scroll={{ x: "max-content", y: 560 }}
             size="middle"
             sticky
         />

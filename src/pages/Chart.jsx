@@ -1,5 +1,5 @@
 import { ReloadOutlined } from "@ant-design/icons";
-import { Alert, Button, Card, Empty, Flex, Segmented, Space, Spin, Typography, theme } from "antd";
+import { Button, Card, Flex, Segmented, Space, Typography, theme } from "antd";
 import { useState } from "react";
 import {
     CartesianGrid,
@@ -10,9 +10,14 @@ import {
     XAxis,
     YAxis,
 } from "recharts";
+import EmptyState from "../components/ui/EmptyState.jsx";
+import ErrorState from "../components/ui/ErrorState.jsx";
+import LoadingState from "../components/ui/LoadingState.jsx";
+import PageHeader from "../components/ui/PageHeader.jsx";
 import { useCoinChart } from "../hooks/useCoinChart.js";
+import { formatCurrency } from "../utils/formatters.js";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const COIN_OPTIONS = [
     { label: "Bitcoin", value: "bitcoin" },
@@ -20,46 +25,17 @@ const COIN_OPTIONS = [
     { label: "Dogecoin", value: "dogecoin" },
 ];
 
-const usdFormatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2,
-});
-
-function formatUsd(value) {
-    if (!Number.isFinite(value)) {
-        return "-";
-    }
-
-    return usdFormatter.format(value);
-}
-
 function formatAxisUsd(value) {
-    if (!Number.isFinite(value)) {
-        return "";
-    }
-
-    return usdFormatter.format(value);
+    return Number.isFinite(value) ? formatCurrency(value) : "";
 }
 
 function ChartContent({ data, loading, colorPrimary, colorBorderSecondary }) {
     if (loading) {
-        return (
-            <Flex align="center" justify="center" style={{ height: 360 }}>
-                <Spin size="large" />
-            </Flex>
-        );
+        return <LoadingState height={360} />;
     }
 
     if (!data.length) {
-        return (
-            <Flex align="center" justify="center" style={{ height: 360, padding: 24 }}>
-                <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="No chart data available"
-                />
-            </Flex>
-        );
+        return <EmptyState description="No chart data available" height={360} />;
     }
 
     return (
@@ -80,7 +56,7 @@ function ChartContent({ data, loading, colorPrimary, colorBorderSecondary }) {
                         axisLine={false}
                         domain={["dataMin", "dataMax"]}
                     />
-                    <Tooltip formatter={(value) => [formatUsd(value), "Price"]} />
+                    <Tooltip formatter={(value) => [formatCurrency(value), "Price"]} />
                     <Line
                         type="monotone"
                         dataKey="price"
@@ -130,30 +106,28 @@ function Chart() {
 
     return (
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
-            <Flex align="flex-start" justify="space-between" gap={16} wrap>
-                <div>
-                    <Title level={2}>7-Day Crypto Price Chart</Title>
-                    <Text type="secondary">Price history with background auto-refresh.</Text>
-                </div>
-
-                <Flex gap={12} wrap>
-                    <Segmented options={COIN_OPTIONS} value={coinId} onChange={setCoinId} />
-                    <Button
-                        type="primary"
-                        icon={<ReloadOutlined />}
-                        loading={isManualRefresh}
-                        disabled={isFetching}
-                        onClick={handleRefresh}
-                    >
-                        Оновити
-                    </Button>
-                </Flex>
-            </Flex>
+            <PageHeader
+                title="7-Day Crypto Price Chart"
+                description="Price history with background auto-refresh."
+                actions={
+                    <>
+                        <Segmented options={COIN_OPTIONS} value={coinId} onChange={setCoinId} />
+                        <Button
+                            type="primary"
+                            icon={<ReloadOutlined />}
+                            loading={isManualRefresh}
+                            disabled={isFetching}
+                            onClick={handleRefresh}
+                        >
+                            {"\u041e\u043d\u043e\u0432\u0438\u0442\u0438"}
+                        </Button>
+                    </>
+                }
+            />
 
             {showBlockingError ? (
-                <Alert
+                <ErrorState
                     type="warning"
-                    showIcon
                     message="Unable to load chart data"
                     description={error.message}
                 />
@@ -166,9 +140,8 @@ function Chart() {
                 </Flex>
 
                 {showRefreshWarning ? (
-                    <Alert
+                    <ErrorState
                         type="warning"
-                        showIcon
                         message={error.message}
                         style={{ marginTop: 12 }}
                     />

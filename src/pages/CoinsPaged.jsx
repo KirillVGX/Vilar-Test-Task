@@ -1,10 +1,10 @@
-import { Alert, Space, Typography } from "antd";
+import { Space } from "antd";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import CoinsTable from "../components/CoinsTable.jsx";
+import ErrorState from "../components/ui/ErrorState.jsx";
+import PageHeader from "../components/ui/PageHeader.jsx";
 import { useCoins } from "../hooks/useCoins.js";
-
-const { Title, Text } = Typography;
 
 const PAGE_SIZE = 20;
 const TOTAL_COINS = 400;
@@ -52,15 +52,14 @@ function CoinsPaged() {
 
     return (
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
-            <div>
-                <Title level={2}>Paginated Cryptocurrency Markets</Title>
-                <Text type="secondary">CoinGecko market data with server-side pagination.</Text>
-            </div>
+            <PageHeader
+                title="Paginated Cryptocurrency Markets"
+                description="CoinGecko market data with server-side pagination."
+            />
 
             {isError ? (
-                <Alert
-                    type="error"
-                    showIcon
+                <ErrorState
+                    type="warning"
                     message="Unable to load market data"
                     description={error.message}
                 />

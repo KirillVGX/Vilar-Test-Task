@@ -13,11 +13,11 @@ const menuItems = routes.map((r) => ({
 function AppLayout() {
     const { pathname } = useLocation();
     const {
-        token: { colorBgContainer, borderRadiusLG },
+        token: { borderRadiusLG, colorBgContainer, colorBgLayout },
     } = theme.useToken();
 
     return (
-        <Layout style={{ minHeight: "100vh" }}>
+        <Layout style={{ minHeight: "100vh", background: colorBgLayout }}>
             <Header style={{ display: "flex", alignItems: "center" }}>
                 <div
                     style={{
@@ -27,7 +27,7 @@ function AppLayout() {
                         marginRight: 32,
                     }}
                 >
-                    My App
+                    Analytics Dashboard
                 </div>
             </Header>
             <Layout>
@@ -54,7 +54,8 @@ function AppLayout() {
                 </Layout>
             </Layout>
             <Footer style={{ textAlign: "center" }}>
-                My App ©{new Date().getFullYear()}
+                Analytics Dashboard {"\u00a9"}
+                {new Date().getFullYear()}
             </Footer>
         </Layout>
     );
