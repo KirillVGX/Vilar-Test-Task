@@ -54,7 +54,7 @@ function AppLayout() {
                 </Layout>
             </Layout>
             <Footer style={{ textAlign: "center" }}>
-                Analytics Dashboard {"\u00a9"}
+                Analytics Dashboard
                 {new Date().getFullYear()}
             </Footer>
         </Layout>
